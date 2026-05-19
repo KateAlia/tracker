@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+</script>
+<title>12 недель — Катя 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1916;
+    --surface2: #222118;
+    --border: #2e2c26;
+    --text: #e8e4d9;
+    --text-dim: #7a7568;
+    --orange: #e8722a;
+    --green: #5a9e6f;
+    --purple: #9b7ec8;
+    --pink: #d4688a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 40px 16px 80px;
+  }
+  .hero {
+    max-width: 1100px;
+    margin: 0 auto 48px;
+    text-align: center;
+    padding: 48px 20px 32px;
+  }
+  .hero-label { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--orange); margin-bottom: 16px; }
+  h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 5vw, 56px); font-weight: 400; line-height: 1.1; margin-bottom: 12px; }
+  .hero-sub { color: var(--text-dim); font-size: 14px; max-width: 440px; margin: 0 auto 32px; line-height: 1.6; }
+  .legend { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-dim); }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .progress-wrap { max-width: 440px; margin: 0 auto; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 7px; }
+  .progress-bar { height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), #f0a050); transition: width 0.5s; }
+
+  .weeks { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+
+  .week-block { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--surface); }
+  .week-header {
+    padding: 18px 26px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .week-num { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3px; }
+  .week-theme { font-family: 'Playfair Display', serif; font-size: 17px; }
+  .week-meta { text-align: right; }
+  .week-dates { font-size: 12px; color: var(--text-dim); margin-bottom: 3px; }
+  .week-badge { font-size: 11px; color: var(--orange); }
+
+  .days-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+  }
+
+  .day-col {
+    border-right: 1px solid var(--border);
+    min-width: 0;
+  }
+  .day-col:last-child { border-right: none; }
+
+  .day-head {
+    padding: 12px 12px 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    position: sticky;
+    top: 0;
+  }
+  .day-name { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); }
+  .day-date { font-size: 13px; font-weight: 500; color: var(--text); margin-top: 1px; }
+  .day-type { font-size: 10px; color: var(--purple); margin-top: 2px; letter-spacing: 1px; }
+
+  .day-slots { padding: 8px 0; }
+
+  .slot {
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(46,44,38,0.5);
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .slot:last-child { border-bottom: none; }
+  .slot:hover { background: rgba(255,255,255,0.02); }
+
+  .slot-time {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    min-width: 36px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .slot-content { flex: 1; min-width: 0; }
+
+  .slot-title {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text);
+    transition: color 0.2s;
+    word-break: break-word;
+  }
+
+  .slot.checked .slot-title {
+    color: var(--text-dim);
+    text-decoration: line-through;
+    text-decoration-color: rgba(255,255,255,0.12);
+  }
+
+  .slot-check {
+    width: 13px; height: 13px;
+    border-radius: 3px;
+    border: 1.5px solid var(--border);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    font-size: 8px;
+    color: white;
+  }
+
+  .slot.orange .slot-check { border-color: rgba(232,114,42,0.5); }
+  .slot.green .slot-check { border-color: rgba(90,158,111,0.5); }
+  .slot.purple .slot-check { border-color: rgba(155,126,200,0.5); }
+  .slot.pink .slot-check { border-color: rgba(212,104,138,0.5); }
+
+  .slot.orange.checked .slot-check { background: var(--orange); border-color: var(--orange); }
+  .slot.green.checked .slot-check { background: var(--green); border-color: var(--green); }
+  .slot.purple.checked .slot-check { background: var(--purple); border-color: var(--purple); }
+  .slot.pink.checked .slot-check { background: var(--pink); border-color: var(--pink); }
+
+  .slot-bar {
+    width: 2px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    align-self: stretch;
+    min-height: 14px;
+  }
+  .slot.orange .slot-bar { background: var(--orange); opacity: 0.6; }
+  .slot.green .slot-bar { background: var(--green); opacity: 0.6; }
+  .slot.purple .slot-bar { background: var(--purple); opacity: 0.6; }
+  .slot.pink .slot-bar { background: var(--pink); opacity: 0.6; }
+
+  .rest-col .day-slots {
+    padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .rest-note { font-size: 11px; color: var(--text-dim); line-height: 1.5; font-style: italic; }
+  .rest-badge { font-size: 10px; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+
+  .week-footer {
+    padding: 12px 26px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .wf-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); }
+  .wf-bar { flex: 1; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .wf-fill { height: 100%; background: linear-gradient(90deg, var(--orange), #f0a050); transition: width 0.4s; }
+  .wf-pct { font-size: 12px; color: var(--orange); min-width: 30px; text-align: right; }
+
+  .phase-div { max-width: 1100px; margin: 4px auto; display: flex; align-items: center; gap: 14px; }
+  .phase-line { flex: 1; height: 1px; background: var(--border); }
+  .phase-text { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); white-space: nowrap; }
+
+  @media (max-width: 900px) {
+    .days-row { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .days-row { grid-template-columns: repeat(2, 1fr); }
+    .slot-time { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-label">18 Мая — 9 Августа 2026</div>
+  <h1>12 недель.<br>Чёткий план.</h1>
+  <p class="hero-sub">Каждый час расписан. Кликай — отмечай — двигайся.</p>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Работа / учёба / доход</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Спорт / рутина / уход</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Языки / творчество / отдых</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--pink)"></div>Личное / Роман</div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Общий прогресс</span><span id="tot-pct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="tot-fill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="weeks" id="weeks"></div>
+
+<script>
+// SCHEDULE TEMPLATES
+// Types: orange, green, purple, pink
+// day types: pilates (mon/wed/fri), workout (tue/thu), light (sat), rest (sun)
+
+const pilatesDay = [
+  {time:"06:00", c:"green", title:"Подъём → умыться → крем (без телефона)"},
+  {time:"06:15", c:"green", title:"Пилатес 60 мин — пока Роман гуляет с Робиным"},
+  {time:"07:15", c:"purple", title:"Duolingo испанский — 15 мин"},
+  {time:"07:30", c:"purple", title:"Английский — подкаст / статья 15 мин"},
+  {time:"07:45", c:"green", title:"Душ + быстрый уход"},
+  {time:"08:00", c:"pink", title:"Зарядка вместе с Романом — 20 мин 💪"},
+  {time:"08:20", c:"green", title:"Готовка завтрака"},
+  {time:"08:30", c:"green", title:"Завтрак вместе — без телефона"},
+  {time:"09:00", c:"orange", title:"🧠 ГЛАВНЫЙ БЛОК — iOS учёба / приложение (90 мин)"},
+  {time:"10:30", c:"orange", title:"Продолжение — практика в Xcode / Figma (60 мин)"},
+  {time:"11:30", c:"green", title:"Короткая прогулка или кофе — 20 мин"},
+  {time:"11:50", c:"orange", title:"Соцсети / YouTube задача дня (40 мин)"},
+  {time:"12:30", c:"purple", title:"Свободное время — читать, вязать, ничего"},
+  {time:"13:50", c:"green", title:"Обед — готовка + еда"},
+  {time:"14:30", c:"purple", title:"Отдых / тихое время — книга, дрём, вязание"},
+  {time:"16:00", c:"orange", title:"Лёгкий рабочий блок — задачи по приложению (60 мин)"},
+  {time:"17:00", c:"purple", title:"Свободно до прогулки"},
+  {time:"18:00", c:"green", title:"Прогулка с Робиным — 60 мин"},
+  {time:"19:00", c:"green", title:"Готовка ужина"},
+  {time:"19:30", c:"green", title:"Ужин с Романом"},
+  {time:"20:00", c:"purple", title:"Вечер вместе — сериал / разговоры"},
+  {time:"21:30", c:"green", title:"Вечерний уход — душ / кожа / зубы"},
+  {time:"22:00", c:"purple", title:"Книга (не твиттер) — 30 мин"},
+  {time:"22:30", c:"green", title:"Сон"}
+];
+
+const workoutDay = [
+  {time:"06:00", c:"green", title:"Подъём → умыться → крем (без телефона)"},
+  {time:"06:15", c:"purple", title:"Кофе + Duolingo испанский — 15 мин"},
+  {time:"06:30", c:"purple", title:"Английский — подкаст / читать 20 мин"},
+  {time:"06:50", c:"purple", title:"Свободно — кофе, книга, ничего"},
+  {time:"07:45", c:"green", title:"Душ + уход — пока Роман с Робиным"},
+  {time:"08:00", c:"pink", title:"Зарядка вместе с Романом — 25 мин 💪"},
+  {time:"08:25", c:"green", title:"Готовка завтрака"},
+  {time:"08:30", c:"green", title:"Завтрак вместе — без телефона"},
+  {time:"09:00", c:"orange", title:"🧠 ГЛАВНЫЙ БЛОК — iOS учёба (90 мин) — пик мозга"},
+  {time:"10:00", c:"orange", title:"Практика — Xcode / Cursor / Figma (90 мин)"},
+  {time:"11:30", c:"purple", title:"Перерыв — кофе, вязание, воздух (30 мин)"},
+  {time:"12:00", c:"orange", title:"Работа над приложением — дизайн / идеи (60 мин)"},
+  {time:"13:00", c:"purple", title:"Свободно"},
+  {time:"13:50", c:"green", title:"Обед"},
+  {time:"14:30", c:"purple", title:"Тихое время — книга, дрём, ничего"},
+  {time:"16:00", c:"orange", title:"Лёгкий блок — Fiverr / соцсети / YouTube (60 мин)"},
+  {time:"17:00", c:"pink", title:"Роман дома — время вместе"},
+  {time:"18:00", c:"green", title:"Прогулка с Робиным — 60 мин"},
+  {time:"19:00", c:"green", title:"Готовка ужина"},
+  {time:"19:30", c:"green", title:"Ужин"},
+  {time:"20:30", c:"pink", title:"♡ Интимное время с Романом"},
+  {time:"21:30", c:"green", title:"Вечерний уход — душ / кожа / зубы"},
+  {time:"22:00", c:"purple", title:"Книга — 30 мин"},
+  {time:"22:30", c:"green", title:"Сон"}
+];
+
+const saturdayDay = [
+  {time:"06:00", c:"green", title:"Подъём (можно до 08:00 — без будильника)"},
+  {time:"08:00", c:"pink", title:"Зарядка вместе с Романом — 20 мин 💪"},
+  {time:"08:20", c:"green", title:"Готовка + долгий завтрак вместе"},
+  {time:"09:30", c:"purple", title:"Duolingo — обязательно"},
+  {time:"10:00", c:"purple", title:"Свободное утро — вязание / кино / ничего"},
+  {time:"12:00", c:"orange", title:"1 пост в соцсети — честно о процессе недели"},
+  {time:"12:30", c:"orange", title:"15 мин: итог недели — что сделала? без осуждения"},
+  {time:"13:00", c:"purple", title:"Свободно"},
+  {time:"14:00", c:"green", title:"Обед"},
+  {time:"15:00", c:"purple", title:"Прогулка / кафе / шоппинг — всё что хочется"},
+  {time:"18:00", c:"green", title:"Прогулка с Робиным"},
+  {time:"19:00", c:"green", title:"Ужин"},
+  {time:"20:30", c:"pink", title:"♡ Интимное время с Романом"},
+  {time:"21:30", c:"green", title:"Вечерний уход"},
+  {time:"22:00", c:"purple", title:"Книга / сериал"},
+  {time:"22:30", c:"green", title:"Сон"}
+];
+
+const sundayDay = null; // rest day
+
+// Week-specific main task overrides by day index (0=Mon..6=Sun)
+const weekTasks = [
+  // Week 1
+  [
+    {main:"Открыть Xcode — где остановилась? 30 мин. Без давления.", youtube:"Пересмотреть канал — набросать идеи для видео"},
+    {main:"iOS: повторить сессию 2 — старое, не новое", extra:"Вязание вечером"},
+    {main:"Figma: набросать 3–5 экранов приложения рецептов", extra:null},
+    {main:"iOS сессия 3 — первый час теории", extra:"Вязание вечером"},
+    {main:"iOS сессия 3 — продолжение + практика Xcode", youtube:"Снять/подготовить видео с Робиным"},
+    {main:null, extra:"Суббота — лёгко"},
+    {main:null, extra:"Полный выходной"}
+  ],
+  // Week 2
+  [
+    {main:"iOS сессия 3 — завершить", youtube:null},
+    {main:"iOS сессия 4 — начало", extra:"Вязание"},
+    {main:"Приложение рецептов: структура данных — обдумать с Ромой", extra:null},
+    {main:"iOS сессия 4 — продолжение", extra:"Вязание"},
+    {main:"iOS сессия 4 — завершить", youtube:"Опубликовать первое видео (даже короткое)"},
+    {main:null, extra:"Показать экраны Figma в посте"},
+    {main:null, extra:"Итог: сессия 4 готова?"}
+  ],
+  // Week 3
+  [
+    {main:"iOS сессия 5 — начало", youtube:null},
+    {main:"Приложение рецептов: первый экран в SwiftUI", extra:"Вязание"},
+    {main:"iOS сессия 5 — продолжение", extra:null},
+    {main:"Приложение: второй экран + навигация", extra:"Вязание"},
+    {main:"iOS сессия 5 — завершить", youtube:"Снять видео с Робиным"},
+    {main:null, extra:"Показать первый рабочий экран в посте"},
+    {main:null, extra:"Итог: 5 сессий iOS пройдено?"}
+  ],
+  // Week 4
+  [
+    {main:"iOS сессия 6 — начало", youtube:null},
+    {main:"Приложение: карточка рецепта", extra:"Вязание"},
+    {main:"iOS сессия 6 — продолжение", extra:null},
+    {main:"Приложение: поиск и фильтр по тегам", extra:"Вязание"},
+    {main:"iOS сессия 6 — завершить", youtube:"Опубликовать видео"},
+    {main:null, extra:"Черновик профиля Fiverr/Upwork"},
+    {main:null, extra:"Итог месяца — 6 сессий iOS, 3–4 экрана"}
+  ],
+  // Week 5
+  [
+    {main:"iOS сессия 7 — начало", youtube:null},
+    {main:"Приложение: форма добавления рецепта", extra:"Вязание — финальный рывок"},
+    {main:"iOS сессия 7 — продолжение", extra:null},
+    {main:"Приложение: тест на своих рецептах", extra:"Вязание"},
+    {main:"iOS сессия 7 — завершить", youtube:"Видео"},
+    {main:null, extra:"Fiverr: создать профиль"},
+    {main:null, extra:"Кардиган готов? Отметь победу 🎉"}
+  ],
+  // Week 6
+  [
+    {main:"iOS сессия 8 — начало", youtube:null},
+    {main:"Приложение: показать Роме — фидбек", extra:null},
+    {main:"iOS сессия 8 + Fiverr: опубликовать гиг", extra:null},
+    {main:"Приложение: исправить по фидбеку", extra:null},
+    {main:"iOS сессия 8 — завершить", youtube:"Видео + пост о запуске Fiverr"},
+    {main:null, extra:"Пост: 6 недель — что изменилось"},
+    {main:null, extra:"Итог: Fiverr запущен, 8 сессий iOS"}
+  ],
+  // Week 7
+  [
+    {main:"iOS сессия 9 — начало", youtube:null},
+    {main:"Приложение рецептов: бета готова", extra:"Fiverr: активные отклики"},
+    {main:"iOS сессия 9 + Pet travel: скетч с Ромой", extra:null},
+    {main:"App Store: изучить требования к публикации", extra:null},
+    {main:"iOS сессия 9 — завершить", youtube:"Видео"},
+    {main:null, extra:"Пост о прогрессе"},
+    {main:null, extra:"Пришли первые деньги? Любые — точка отсчёта"}
+  ],
+  // Week 8
+  [
+    {main:"iOS сессия 10 — ФИНАЛЬНАЯ, начало", youtube:null},
+    {main:"Приложение: иконка + скриншоты для App Store", extra:"Fiverr"},
+    {main:"iOS сессия 10 + Pet travel: первые экраны Figma", extra:null},
+    {main:"Приложение: финальные правки перед сабмитом", extra:null},
+    {main:"iOS сессия 10 — ЗАВЕРШИТЬ. Курс пройден! 🎉", youtube:"Видео: «я завершила iOS-курс»"},
+    {main:null, extra:"Пост: курс завершён — что дальше"},
+    {main:null, extra:"Праздновать. Это большое."}
+  ],
+  // Week 9
+  [
+    {main:"Подать приложение рецептов в App Store 🚀", youtube:null},
+    {main:"Pet travel: экраны профиля питомца", extra:"Fiverr"},
+    {main:"Pet travel: экран требований для страны", extra:null},
+    {main:"Pet travel: чеклист для поездки", extra:null},
+    {main:"Pet travel: логика уведомлений о документах", youtube:"Видео"},
+    {main:null, extra:"Пост: первый анонс pet travel app"},
+    {main:null, extra:"Приложение в ревью. Ждём — это нормально."}
+  ],
+  // Week 10
+  [
+    {main:"Приложение рецептов — РЕЛИЗ в App Store 🚀🚀", youtube:null},
+    {main:"Pet travel: разработка SwiftUI экранов", extra:"Fiverr"},
+    {main:"Pet travel: база данных стран (с Ромой)", extra:null},
+    {main:"Мониторинг отзывов на первое приложение", extra:null},
+    {main:"Pet travel: уведомления — реализация", youtube:"Видео о релизе приложения"},
+    {main:null, extra:"Пост: первое приложение в App Store — честно"},
+    {main:null, extra:"Считаем первые загрузки. Радуемся каждой."}
+  ],
+  // Week 11
+  [
+    {main:"Pet travel: основные экраны завершены", youtube:null},
+    {main:"Figma-шаблон: упаковать ассет для Gumroad", extra:"Fiverr"},
+    {main:"Pet travel: тест маршрута Белград→Лондон", extra:null},
+    {main:"Gumroad: опубликовать первый цифровой продукт", extra:null},
+    {main:"Pet travel: финальная полировка", youtube:"Видео"},
+    {main:null, extra:"Пост: 2,5 месяца — источники дохода"},
+    {main:null, extra:"Считаем деньги. Что работает лучше всего?"}
+  ],
+  // Week 12
+  [
+    {main:"Pet travel: подать в App Store", youtube:null},
+    {main:"Армения: купить билеты (если план актуален)", extra:"Fiverr: итог 12 недель"},
+    {main:"Написать следующий 12-недельный план", extra:null},
+    {main:"ETF: открыть счёт в Interactive Brokers", extra:null},
+    {main:"Pet travel: ждём ревью App Store", youtube:"Итоговое видео: 12 недель честно"},
+    {main:null, extra:"Большой пост: 12 недель — что изменилось"},
+    {main:null, extra:"ФИНАЛ. Два приложения. Первый доход. Следующий уровень."}
+  ]
+];
+
+const dayNames = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+const dayTypes = ["pilates","workout","pilates","workout","pilates","light","rest"];
+
+// Generate dates starting from May 18, 2026
+function getDate(weekIdx, dayIdx) {
+  const start = new Date(2026, 4, 18); // May 18 2026
+  const d = new Date(start);
+  d.setDate(start.getDate() + weekIdx * 7 + dayIdx);
+  const months = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"];
+  return `${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+const weekThemes = [
+  "Возвращение в ритм",
+  "Уплотняем привычки",
+  "Первые результаты",
+  "Строим momentum",
+  "Реальная разработка",
+  "Выход в мир",
+  "Первые деньги",
+  "Набираем обороты",
+  "Только практика",
+  "Запуск 🚀",
+  "Масштабирование",
+  "Итог и следующий уровень"
+];
+
+const phases = [
+  {after:2, label:"Фаза 2 — Первые результаты"},
+  {after:4, label:"Фаза 3 — Реальная разработка"},
+  {after:6, label:"Фаза 4 — Запуск и доход"},
+  {after:8, label:"Фаза 5 — Финальный рывок"},
+  {after:10, label:"Фаза 6 — Итог"}
+];
+
+function getDateRange(weekIdx) {
+  const s = getDate(weekIdx, 0);
+  const e = getDate(weekIdx, 6);
+  return `${s} — ${e} 2026`;
+}
+
+function getSlotsForDay(type, weekIdx, dayIdx) {
+  const wt = weekTasks[weekIdx][dayIdx];
+  if (type === "rest") return null;
+  let base = type === "pilates" ? pilatesDay : type === "workout" ? workoutDay : saturdayDay;
+  // Clone and inject week-specific main task
+  let slots = base.map(s => ({...s}));
+  if (wt && wt.main) {
+    // Replace first orange slot title
+    const firstOrange = slots.find(s => s.c === "orange");
+    if (firstOrange) firstOrange.title = "🧠 " + wt.main;
+  }
+  if (wt && wt.youtube) {
+    // Replace or add youtube task in afternoon
+    const ytSlot = slots.find(s => s.title.includes("YouTube") || s.title.includes("Соцсети"));
+    if (ytSlot) ytSlot.title = "▶ " + wt.youtube;
+  }
+  if (wt && wt.extra && type === "workout") {
+    const lastPurple = [...slots].reverse().find(s => s.c === "purple" && s.time < "20:00");
+    if (lastPurple) lastPurple.title = wt.extra;
+  }
+  return slots;
+}
+
+let state = {};
+try { state = JSON.parse(localStorage.getItem('k12v2') || '{}'); } catch {}
+function save() { try { localStorage.setItem('k12v2', JSON.stringify(state)); } catch {} }
+
+function slotId(w,d,s) { return `w${w}d${d}s${s}`; }
+
+function updateTotal() {
+  let tot = 0, done = 0;
+  document.querySelectorAll('.slot').forEach(el => {
+    tot++;
+    if (el.classList.contains('checked')) done++;
+  });
+  const pct = tot ? Math.round(done/tot*100) : 0;
+  document.getElementById('tot-pct').textContent = pct + '%';
+  document.getElementById('tot-fill').style.width = pct + '%';
+}
+
+function updateWeek(w) {
+  let tot = 0, done = 0;
+  document.querySelectorAll(`.slot[data-week="${w}"]`).forEach(el => {
+    tot++;
+    if (el.classList.contains('checked')) done++;
+  });
+  const pct = tot ? Math.round(done/tot*100) : 0;
+  const fill = document.getElementById(`wf-${w}`);
+  const pct2 = document.getElementById(`wp-${w}`);
+  const badge = document.getElementById(`wb-${w}`);
+  if (fill) fill.style.width = pct + '%';
+  if (pct2) pct2.textContent = pct + '%';
+  if (badge) badge.textContent = `${done}/${tot} задач`;
+}
+
+function render() {
+  const container = document.getElementById('weeks');
+
+  for (let w = 0; w < 12; w++) {
+    const block = document.createElement('div');
+    block.className = 'week-block';
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'week-header';
+    hdr.innerHTML = `
+      <div>
+        <div class="week-num">Неделя ${w+1} из 12</div>
+        <div class="week-theme">${weekThemes[w]}</div>
+      </div>
+      <div class="week-meta">
+        <div class="week-dates">${getDateRange(w)}</div>
+        <div class="week-badge" id="wb-${w+1}">0/0 задач</div>
+      </div>`;
+    block.appendChild(hdr);
+
+    // Days row
+    const row = document.createElement('div');
+    row.className = 'days-row';
+
+    for (let d = 0; d < 7; d++) {
+      const type = dayTypes[d];
+      const slots = getSlotsForDay(type, w, d);
+      const wt = weekTasks[w][d];
+
+      const col = document.createElement('div');
+      col.className = `day-col${type === 'rest' ? ' rest-col' : ''}`;
+
+      const dh = document.createElement('div');
+      dh.className = 'day-head';
+      const typeLabel = type === 'pilates' ? 'Пилатес' : type === 'workout' ? 'Зарядка' : type === 'light' ? 'Лёгкий день' : 'Выходной';
+      dh.innerHTML = `<div class="day-name">${dayNames[d]}</div><div class="day-date">${getDate(w, d)}</div><div class="day-type">${typeLabel}</div>`;
+      col.appendChild(dh);
+
+      const slotsEl = document.createElement('div');
+      slotsEl.className = 'day-slots';
+
+      if (type === 'rest') {
+        slotsEl.innerHTML = `<div class="rest-badge">Выходной ♡</div><div class="rest-note">${wt?.extra || 'Отдых, Роман, Робин, кино.'}</div>`;
+      } else {
+        slots.forEach((slot, si) => {
+          const id = slotId(w+1, d, si);
+          const el = document.createElement('div');
+          el.className = `slot ${slot.c}${state[id] ? ' checked' : ''}`;
+          el.setAttribute('data-week', w+1);
+          el.innerHTML = `
+            <div class="slot-check">${state[id] ? '✓' : ''}</div>
+            <div class="slot-bar"></div>
+            <div class="slot-content">
+              <div class="slot-time">${slot.time}</div>
+              <div class="slot-title">${slot.title}</div>
+            </div>`;
+          el.addEventListener('click', () => {
+            state[id] = !state[id];
+            el.classList.toggle('checked', state[id]);
+            el.querySelector('.slot-check').textContent = state[id] ? '✓' : '';
+            save();
+            updateWeek(w+1);
+            updateTotal();
+          });
+          slotsEl.appendChild(el);
+        });
+      }
+
+      col.appendChild(slotsEl);
+      row.appendChild(col);
+    }
+
+    block.appendChild(row);
+
+    // Footer
+    const ftr = document.createElement('div');
+    ftr.className = 'week-footer';
+    ftr.innerHTML = `
+      <div class="wf-label">Прогресс</div>
+      <div class="wf-bar"><div class="wf-fill" id="wf-${w+1}" style="width:0%"></div></div>
+      <div class="wf-pct" id="wp-${w+1}">0%</div>`;
+    block.appendChild(ftr);
+    container.appendChild(block);
+
+    // Phase divider
+    const ph = phases.find(p => p.after === w+1);
+    if (ph) {
+      const div = document.createElement('div');
+      div.className = 'phase-div';
+      div.innerHTML = `<div class="phase-line"></div><div class="phase-text">${ph.label}</div><div class="phase-line"></div>`;
+      container.appendChild(div);
+    }
+
+    updateWeek(w+1);
+  }
+  updateTotal();
+}
+
+render();
+</script>
+</body>
+</html>
